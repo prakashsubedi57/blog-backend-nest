@@ -16,7 +16,7 @@ export class FileUploadService {
         },
       }),
       fileFilter: (req, file, cb) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|jfif)$/)) {
           cb(new BadRequestException('Unsupported file type'), false);
         } else {
           cb(null, true);

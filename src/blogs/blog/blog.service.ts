@@ -215,7 +215,6 @@ export class BlogService {
       const pageSize = filterDto.pageSize || 10;
       const skip = (pageNumber - 1) * pageSize;
 
-
       // Execute the query
       const [blogs, total] = await Promise.all([
         this.blogModel.find(query)

@@ -17,7 +17,7 @@ export class CategoryService {
       }
       let slug = slugify(createCategoryDto.name);
       slug = await this.getUniqueSlug(slug);
-      const category = new this.categoryModel({ ...createCategoryDto, image: 'blog/' + image.filename, slug });
+      const category = new this.categoryModel({ ...createCategoryDto, image: 'category/' + image.filename, slug });
       return category.save();
     } catch (error) {
       return {
@@ -55,7 +55,7 @@ export class CategoryService {
       }
 
       if (image) {
-        updateCategoryDto.image = image.filename;
+        updateCategoryDto.image = 'category/'+ image.filename;
       }
 
       if (category.name == updateCategoryDto.name) {
