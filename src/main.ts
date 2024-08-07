@@ -13,7 +13,7 @@ async function bootstrap() {
 
   // Serve static assets
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads', 
+    prefix: '/uploads',
   });
 
   // Swagger setup
@@ -30,10 +30,12 @@ async function bootstrap() {
 
   // CORS configuration
   app.enableCors({
-    allowedHeaders: ['content-type','Authorization'],
-    origin: 'http://localhost:3000', 
+    allowedHeaders: ['content-type', 'Authorization'],
+    // origin: 'http://localhost:3000', 
+    origin: true,
     credentials: true,
   });
+  
 
   await app.listen(5000);
 }

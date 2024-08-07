@@ -11,7 +11,7 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) { }
 
   @Post()
-  @UseInterceptors(FileUploadInterceptor('category'))
+  @UseInterceptors(FileUploadInterceptor('image'))
   @ApiConsumes('multipart/form-data')
   create(@Body() createCategoryDto: CreateCategoryDto, @UploadedFile() file: Express.Multer.File) {
     return this.categoryService.create(createCategoryDto, file);
@@ -28,7 +28,7 @@ export class CategoryController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileUploadInterceptor('category'))
+  @UseInterceptors(FileUploadInterceptor('image'))
   @ApiConsumes('multipart/form-data')
   update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto, @UploadedFile() file?: Express.Multer.File) {
     return this.categoryService.update(id, updateCategoryDto, file);

@@ -7,33 +7,27 @@ import { FileUploadInterceptor } from 'src/common/interceptors/file-upload.inter
 import { JwtAuthGuard } from 'src/auth/authencation/jwt-auth.guard';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { BlogFilterDto } from './dto/blog-filter.dto';
-import { GetBlogsDto } from './dto/get-blogs.dto';
+import { FileUploadService } from 'src/common/services/file-upload.service';
 
 @ApiTags('blog')
 @Controller('blog')
 export class BlogController {
-  constructor(private readonly blogService: BlogService) {}
+
+  constructor(private readonly blogService: BlogService, private readonly fileUploadService: FileUploadService) { }
 
   @Post()
-  @UseInterceptors(FileUploadInterceptor('blog'))
+  @UseInterceptors(FileUploadInterceptor('image'))
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: CreateBlogDto })
   async create(
     @Body() createBlogDto: CreateBlogDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() img: Express.Multer.File,
   ) {
-    return this.blogService.create(createBlogDto, file);
+    return this.blogService.create(createBlogDto, img);
   }
 
   @Get()
   findAll() {
     return this.blogService.findAll();
-  }
-
-  @Get('get/all')
-  async getBlogs(@Query() getBlogsDto: GetBlogsDto) {
-    const { blogs, total } = await this.blogService.findAllBlog(getBlogsDto);
-    return { blogs, total };
   }
 
   @Get(':slug')
@@ -42,9 +36,8 @@ export class BlogController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileUploadInterceptor('blog'))
+  @UseInterceptors(FileUploadInterceptor('image'))
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: UpdateBlogDto })
   async update(
     @Param('id') id: string,
     @Body() updateBlogDto: UpdateBlogDto,
@@ -70,7 +63,7 @@ export class BlogController {
   }
 
   @Post('comment')
-  @ApiBearerAuth('JWT')
+  @ApiBearerAuth('XYZ')
   @UseGuards(JwtAuthGuard)
   async comment(@Req() req, @Body() createCommentDto: CreateCommentDto) {
     const userId = req.user._id;
@@ -83,5 +76,16 @@ export class BlogController {
     @Param('commentId') commentId: string,
   ) {
     return this.blogService.deleteComment(blogId, commentId);
+  }
+
+  @Post('upload/file')
+  @UseInterceptors(FileUploadInterceptor('file'))
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (file) {
+      const imageUrl = await this.fileUploadService.uploadImage(file);
+      return { imageUrl };
+    } else {
+      return { message: 'No file uploaded' };
+    }
   }
 }

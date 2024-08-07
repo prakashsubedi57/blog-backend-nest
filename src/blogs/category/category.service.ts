@@ -5,19 +5,29 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Category } from './entities/category.entity';
 import { slugify } from 'src/utils/slugify';
+import { FileUploadService } from 'src/common/services/file-upload.service';
 
 @Injectable()
 export class CategoryService {
-  constructor(@InjectModel(Category.name) private categoryModel: Model<Category>) { }
+  constructor(
+    @InjectModel(Category.name) private categoryModel: Model<Category>,
+    private readonly fileUploadService: FileUploadService
+
+
+  ) { }
 
   async create(createCategoryDto: CreateCategoryDto, image: Express.Multer.File) {
     try {
       if (!image) {
         throw new BadRequestException('Image file is required');
       }
+
+      if (image) {
+        createCategoryDto.image = await this.fileUploadService.uploadImage(image);
+      }
       let slug = slugify(createCategoryDto.name);
       slug = await this.getUniqueSlug(slug);
-      const category = new this.categoryModel({ ...createCategoryDto, image: 'category/' + image.filename, slug });
+      const category = new this.categoryModel({ ...createCategoryDto, slug });
       return category.save();
     } catch (error) {
       return {
@@ -55,7 +65,7 @@ export class CategoryService {
       }
 
       if (image) {
-        updateCategoryDto.image = 'category/'+ image.filename;
+        updateCategoryDto.image = await this.fileUploadService.uploadImage(image);
       }
 
       if (category.name == updateCategoryDto.name) {

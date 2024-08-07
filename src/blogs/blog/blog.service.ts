@@ -7,12 +7,14 @@ import { Model, Types } from 'mongoose';
 import { slugify } from 'src/utils/slugify';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { BlogFilterDto } from './dto/blog-filter.dto';
-import { GetBlogsDto } from './dto/get-blogs.dto';
+import { FileUploadService } from 'src/common/services/file-upload.service';
 
 @Injectable()
 export class BlogService {
   constructor(
-    @InjectModel(Blog.name) private blogModel: Model<Blog>
+    @InjectModel(Blog.name) private blogModel: Model<Blog>,
+    private readonly fileUploadService: FileUploadService
+
   ) { }
 
   // store blog
@@ -21,9 +23,9 @@ export class BlogService {
       const slug = await this.getUniqueSlug(createBlogDto.title);
 
       if (file) {
-        createBlogDto.image = 'blog/' + file.filename;
+        const uploadResult = await this.fileUploadService.uploadImage(file);
+        createBlogDto.image = uploadResult;
       }
-
       if (typeof createBlogDto.tags === 'string') {
         createBlogDto.tags = JSON.parse(createBlogDto.tags);
       }
@@ -37,10 +39,10 @@ export class BlogService {
       return await createdBlog.save();
     } catch (error) {
       console.log(error);
-      throw new ConflictException('Blog creation failed');
+      throw new ConflictException('Blog creation failed', error.message);
     }
   }
-
+  
   // get all blogs
   async findAll() {
     try {
@@ -52,30 +54,6 @@ export class BlogService {
     }
   }
 
-  // find blogs
-  async findAllBlog(getBlogsDto: GetBlogsDto) {
-    try {
-      const { page = 1, limit = 10 } = getBlogsDto;
-
-      const pageNumber = page < 1 ? 1 : page;
-      const pageSize = limit < 1 ? 10 : limit;
-
-      const skip = (pageNumber - 1) * pageSize;
-
-      const [blogs, total] = await Promise.all([
-        this.blogModel.find()
-          .skip(skip)
-          .limit(pageSize)
-          .populate(this.getPopulationOptions())
-          .exec(),
-        this.blogModel.countDocuments().exec(),
-      ]);
-
-      return { blogs, total };
-    } catch (error) {
-      throw new ConflictException('Blog fetching failed');
-    }
-  }
   // find published blog
   async findAllPublished() {
     try {
@@ -83,7 +61,7 @@ export class BlogService {
         .populate(this.getPopulationOptions())
         .exec();
     } catch (error) {
-      throw new ConflictException('Blog fetching failed');
+      throw new ConflictException('Blog fetching failed', error.message);
     }
   }
 
@@ -103,12 +81,14 @@ export class BlogService {
           { 'tags.tag': { $in: tagIds } },
           { 'categories.category': { $in: categoryIds } },
           { title: { $regex: title, $options: 'i' } }
-        ]
+        ],
+        status: 'Published'
       })
         .populate(this.getPopulationOptions())
         .limit(5)
         .exec();
     } catch (error) {
+
       throw new ConflictException('Error finding similar blogs');
     }
   }
@@ -125,7 +105,7 @@ export class BlogService {
       const similarBlogs = await this.findSimilarBlog(slug);
       return { blog, similarBlogs };
     } catch (error) {
-      throw new ConflictException('Blog retrieval failed');
+      throw new ConflictException('Blog retrieval failed', error.message);
     }
   }
 
@@ -136,7 +116,8 @@ export class BlogService {
       if (!blog) throw new NotFoundException('Blog not found');
 
       if (file) {
-        updateBlogDto.image = 'blog/' + file.filename;
+        const uploadResult = await this.fileUploadService.uploadImage(file);
+        updateBlogDto.image = uploadResult;
       }
 
       if (typeof updateBlogDto.tags === 'string') {
@@ -147,6 +128,9 @@ export class BlogService {
         updateBlogDto.categories = JSON.parse(updateBlogDto.categories);
       }
 
+      if (typeof updateBlogDto.metaKeywords === 'string') {
+        updateBlogDto.metaKeywords = JSON.parse(updateBlogDto.metaKeywords);
+      }
 
       if (blog.title == updateBlogDto.title) {
         updateBlogDto.slug = blog.slug;
@@ -187,7 +171,6 @@ export class BlogService {
       if (filterDto.categories && filterDto.categories.length > 0) {
         query['categories.category'] = { $in: filterDto.categories };
       }
-
       if (filterDto.tags && filterDto.tags.length > 0) {
         query['tags.tag'] = { $in: filterDto.tags };
       }
@@ -199,6 +182,9 @@ export class BlogService {
       }
       if (filterDto.updatedDate) {
         query.updatedAt = { $gte: new Date(filterDto.updatedDate) };
+      }
+      if (filterDto.status) {
+        query.status = filterDto.status;
       }
 
       // Sorting
@@ -215,7 +201,7 @@ export class BlogService {
       const pageSize = filterDto.pageSize || 10;
       const skip = (pageNumber - 1) * pageSize;
 
-      // Execute the query
+      // Execute 
       const [blogs, total] = await Promise.all([
         this.blogModel.find(query)
           .sort(sort)
@@ -297,11 +283,15 @@ export class BlogService {
 
     return slug;
   }
+
   private getPopulationOptions() {
     return [
       { path: 'tags', populate: 'tag' },
       { path: 'categories', populate: 'category' },
-      { path: 'comments', populate: 'user' }
+      {
+        path: 'comments',
+        populate: { path: 'user', select: 'name email' }
+      }
     ];
   }
 }

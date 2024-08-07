@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Blog Post</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+</head>
+
+<body>
+    <h1>Create Blog Post</h1>
+    <form id="blogForm">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="slug">Slug:</label><br>
+        <input type="text" id="slug" name="slug"><br><br>
+
+        <label for="shortDescription">Short Description:</label><br>
+        <input type="text" id="shortDescription" name="shortDescription" required><br><br>
+
+        <label for="content">Content:</label><br>
+        <textarea id="summernote" name="content" required></textarea><br><br>
+
+        <label for="image">Image:</label><br>
+        <input type="file" id="image" name="image"><br><br>
+
+        <label for="author">Author:</label><br>
+        <input type="text" id="author" name="author" required><br><br>
+
+        <label for="authorImage">Author Image URL:</label><br>
+        <input type="text" id="authorImage" name="authorImage"><br><br>
+
+        <label for="status">Status:</label><br>
+        <select id="status" name="status" required>
+            <option value="Draft">Draft</option>
+            <option value="Published">Published</option>
+            <option value="Archived">Archived</option>
+        </select><br><br>
+
+        <label for="tags">Tags (comma separated):</label><br>
+        <input type="text" id="tags" name="tags" value="66ac6ef69c713207b0469742" required><br><br>
+
+        <label for="categories">Categories (comma separated):</label><br>
+        <input type="text" id="categories" name="categories" value="66ac6bfa9c713207b04696cd" required><br><br>
+
+        <label for="metaTitle">Meta Title:</label><br>
+        <input type="text" id="metaTitle" name="metaTitle"><br><br>
+
+        <label for="metaDescription">Meta Description:</label><br>
+        <input type="text" id="metaDescription" name="metaDescription"><br><br>
+
+        <label for="metaKeywords">Meta Keywords (comma separated):</label><br>
+        <input type="text" id="metaKeywords" name="metaKeywords"><br><br>
+
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+
+    <script>
+        $(document).ready(function () {
+            $('#summernote').summernote({
+                placeholder: 'Write your content here...',
+                tabsize: 2,
+                height: 120,
+                callbacks: {
+                    onImageUpload: function (files) {
+                        uploadImage(files[0]);
+                    }
+                },
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'underline', 'clear']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture', 'video']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ]
+            });
+        });
+
+        function submitForm() {
+            const formElement = document.getElementById('blogForm');
+            const formData = new FormData(formElement);
+
+            // Get the content from Summernote and set it in the form data
+            const content = $('#summernote').summernote('code');
+            formData.set('content', content);
+
+            if (formData.get('files') || formData.get('files').name === "") {
+                formData.delete('files');   
+            }
+
+            // Convert tags and categories to JSON strings
+            const tags = formData.get('tags').split(',').map(tag => ({ tag: tag.trim() }));
+            formData.set('tags', JSON.stringify(tags));
+
+            const categories = formData.get('categories').split(',').map(category => ({ category: category.trim() }));
+            formData.set('categories', JSON.stringify(categories));
+
+            const metaKeywords = formData.get('metaKeywords').split(',');
+            formData.set('metaKeywords', JSON.stringify(metaKeywords));
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://localhost:5000/blog', true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    alert('Blog post created successfully!');
+                } else if (xhr.readyState === 4) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            };
+            xhr.send(formData);
+        }
+        function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('http://localhost:5000/blog/upload/file', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    $('#summernote').summernote('insertImage', data.imageUrl);
+                })
+                .catch(error => console.error('Error uploading image:', error));
+        }
+    </script>
+</body>
+
+</html>

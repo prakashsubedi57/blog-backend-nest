@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch and Display Blog Posts</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+    <style>
+        .post {
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .post h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .post p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Blog Post Management</h1>
+
+    <button id="fetchDataButton">Fetch Blog Posts</button>
+    <div id="dataContainer"></div>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize Summernote editor
+            $('#summernote').summernote({
+                placeholder: 'Write your content here...',
+                tabsize: 2,
+                height: 120,
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'underline', 'clear']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture', 'video']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ]
+            });
+
+            // Fetch data when the button is clicked
+            $('#fetchDataButton').on('click', function () {
+                fetchData();
+            });
+
+            function fetchData() {
+                $.ajax({
+                    url: 'http://localhost:5000/blog', 
+                    method: 'GET',
+                    success: function (data) {
+                        displayData(data);
+                    },
+                    error: function (xhr, status, error) {
+                        $('#dataContainer').html('<p>Error fetching data: ' + error + '</p>');
+                    }
+                });
+            }
+
+            function displayData(data) {
+                let html = '';
+                data.forEach(item => {
+                    html += `
+                        <div class="post">
+                            <h1>${item.title}</h1>
+                            <p><strong>Image:</strong><img src="${item.image}" alt="Image"></p>
+                            <p><strong>Slug:</strong> ${item.slug}</p>
+                            <p><strong>Short Description:</strong> ${item.shortDescription}</p>
+                            <p><strong>Content:</strong> ${item.content}</p>
+                        </div>
+                    `;
+                });
+                $('#dataContainer').html(html);
+            }
+        });
+    </script>
+</body>
+
+</html>

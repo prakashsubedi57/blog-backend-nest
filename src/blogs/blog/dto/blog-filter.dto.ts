@@ -93,4 +93,14 @@ export class BlogFilterDto {
     @IsOptional()
     @IsPositive()
     pageSize?: number;
+
+    @ApiProperty({
+        description: 'Filter By Status',
+        example: 'Published',
+        required: false,
+        enum: ['Draft', 'Published', 'Archived'],
+    })
+    @IsOptional()
+    @IsIn(['Draft', 'Published', 'Archived'])
+    status?: 'Draft' | 'Published' | 'Archived';
 }
