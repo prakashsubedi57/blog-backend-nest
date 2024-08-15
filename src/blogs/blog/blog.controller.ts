@@ -15,15 +15,12 @@ import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import {
-  ApiBearerAuth,
   ApiBody,
-  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { FileUploadInterceptor } from 'src/common/interceptors/file-upload.interceptor';
-import { JwtAuthGuard } from 'src/auth/authencation/jwt-auth.guard';
 import { BlogFilterDto } from './dto/blog-filter.dto';
 import { FileUploadService } from 'src/common/services/file-upload.service';
 
