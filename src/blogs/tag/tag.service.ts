@@ -3,59 +3,81 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
-import { Tag } from './entities/tag.entity';
+import { Tag } from './schemas/tag.schema';
 import { slugify } from 'src/utils/slugify';
+import { ResponseService } from 'src/utils/response.service';
 
 @Injectable()
 export class TagsService {
-  constructor(@InjectModel(Tag.name) private tagModel: Model<Tag>) { }
+  constructor(
+    @InjectModel(Tag.name) private tagModel: Model<Tag>,
+    private readonly responseService: ResponseService
+  ) { }
 
-  async create(createTagDto: CreateTagDto): Promise<Tag> {
+  async create(createTagDto: CreateTagDto) {
     try {
-      let slug = slugify(createTagDto.name);
+      const { name, description } = createTagDto;
+
+      // Validate required fields
+      if (!name) {
+        return this.responseService.error('Name is required.');
+      }
+
+      // Generate and validate unique slug
+      let slug = slugify(name);
       slug = await this.getUniqueSlug(slug);
-      const createdTag = new this.tagModel({ ...createTagDto, slug });
-      return await createdTag.save();
+
+      // Create and save the tag
+      const createdTag = new this.tagModel({ name, description, slug });
+      await createdTag.save();
+      return this.responseService.success(createdTag, 'Tag created successfully', 201);
     } catch (error) {
-      throw new ConflictException('Tag creation failed');
+      return this.responseService.error('Tag creation failed: ', error.message);
     }
   }
 
   async findAll() {
-
     try {
-      return this.tagModel.find().exec();
+      const tags = await this.tagModel.find().exec();
+      return this.responseService.success(tags, 'Tags retrieved successfully');
     } catch (error) {
-      throw new NotFoundException('Tags not found');
+      return this.responseService.error('Tags retrieval failed ', error.message);
     }
   }
 
   async findOne(id: string) {
-    const tag = await this.tagModel.findById(id).exec();
-    if (!tag) {
-      throw new NotFoundException('Tag not found');
+    try {
+      const tag = await this.tagModel.findById(id).exec();
+      if (!tag) {
+        return this.responseService.error('Tag not found');
+      }
+      return tag;
+    } catch (error) {
+      return this.responseService.error('Tag retrieval failed ', error.message);
     }
-    return tag;
   }
 
   async update(id: string, updateTagDto: UpdateTagDto) {
     try {
-      const updateData = { ...updateTagDto };
-      if (updateTagDto.name) {
-        let slug = slugify(updateTagDto.name);
-        slug = await this.getUniqueSlug(slug, id);
-        updateData.slug = slug;
+      const tag = await this.tagModel.findById(id).exec();
+      if (!tag) {
+        return this.responseService.error('Tag not found');
       }
-      const updatedTag = await this.tagModel.findByIdAndUpdate(id, updateData, {
-        new: true,
-        runValidators: true,
-      }).exec();
+
+      // Handle slug change
+      const { name, description } = updateTagDto;
+      let slug = tag.slug;
+      if (name && name !== tag.name) {
+        slug = await this.getUniqueSlug(slugify(name), id);
+      }
+
+      const updatedTag = await this.tagModel.findByIdAndUpdate(id, { name, description, slug }, { new: true }).exec();
       if (!updatedTag) {
-        throw new NotFoundException('Tag not found');
+        return this.responseService.error('Tag update failed');
       }
       return updatedTag;
     } catch (error) {
-      throw new ConflictException('Tag update failed');
+      return this.responseService.error('Tag update failed ', error.message);
     }
   }
 
@@ -63,15 +85,15 @@ export class TagsService {
     try {
       const result = await this.tagModel.findByIdAndDelete(id).exec();
       if (!result) {
-        throw new NotFoundException('Tag not found');
+        return this.responseService.error('Tag not found');
       }
-      return result;
+      return this.responseService.success(result, 'Tag deleted successfully');
     } catch (error) {
-      throw new ConflictException('Tag deletion failed');
+      return this.responseService.error('Tag deletion failed ', error.message);
     }
   }
 
-  private async getUniqueSlug(slug: string, excludeId?: string) {
+  private async getUniqueSlug(slug: string, excludeId?: string): Promise<string> {
     let uniqueSlug = slug;
     let index = 1;
 

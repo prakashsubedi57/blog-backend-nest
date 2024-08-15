@@ -8,16 +8,25 @@ import { CategoryModule } from './blogs/category/category.module';
 import { TagModule } from './blogs/tag/tag.module';
 import { BlogModule } from './blogs/blog/blog.module';
 import { ConfigModule } from '@nestjs/config';
+import { CommentModule } from './blogs/comment/comment.module';
+import { NewsletterModule } from './blogs/newsletter/newsletter.module';
+import { MailerModule } from './mailer/mailer.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb+srv://lpsubedi2002:XOicrK1SiftFEdXE@blogsapp.jzrpcj1.mongodb.net/?retryWrites=true&w=majority&appName=blogsapp'),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    MongooseModule.forRoot(process.env.DB_URL),
     UserModule,
     LoginModule,
     CategoryModule,
     TagModule,
+    CommentModule,
     BlogModule,
-    ConfigModule.forRoot()
+    NewsletterModule,
+    MailerModule
+
   ],
   controllers: [AppController],
   providers: [AppService],

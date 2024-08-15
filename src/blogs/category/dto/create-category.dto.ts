@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsUrl } from 'class-validator';
 
 export class CreateCategoryDto {
     @ApiProperty({
@@ -10,30 +10,11 @@ export class CreateCategoryDto {
     @IsString()
     name: string;
 
-    @ApiProperty({
-        description: 'Unique identifier for the category, auto-generated',
-        example: 'technology',
-        required: false,
-    })
-    @IsOptional()
-    @IsString()
-    slug?: string;
-
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'A brief description of the category',
         example: 'Posts related to technology and gadgets',
-        required: false,
     })
     @IsOptional()
     @IsString()
     description?: string;
-
-    @ApiPropertyOptional({
-        description: 'Image file for the category',
-        type: 'string',
-        format: 'binary',
-    })
-    @IsOptional()
-    image?: any;  
 }
-

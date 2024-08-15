@@ -1,100 +1,99 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Category } from './entities/category.entity';
+import { Category } from './schemas/category.schema';
 import { slugify } from 'src/utils/slugify';
-import { FileUploadService } from 'src/common/services/file-upload.service';
+import { ResponseService } from 'src/utils/response.service';
 
 @Injectable()
 export class CategoryService {
   constructor(
     @InjectModel(Category.name) private categoryModel: Model<Category>,
-    private readonly fileUploadService: FileUploadService
-
-
+    private readonly responseService: ResponseService,
   ) { }
 
-  async create(createCategoryDto: CreateCategoryDto, image: Express.Multer.File) {
+  async create(createCategoryDto: CreateCategoryDto) {
     try {
-      if (!image) {
-        throw new BadRequestException('Image file is required');
+      // Destructure the DTO
+      const { name, description } = createCategoryDto;
+
+      // Validate required fields
+      if (!name) {
+        return this.responseService.error('Name is required.');
       }
 
-      if (image) {
-        createCategoryDto.image = await this.fileUploadService.uploadImage(image);
-      }
-      let slug = slugify(createCategoryDto.name);
+      // Generate and validate unique slug
+      let slug = slugify(name);
       slug = await this.getUniqueSlug(slug);
-      const category = new this.categoryModel({ ...createCategoryDto, slug });
-      return category.save();
-    } catch (error) {
-      return {
-        message: error.message
-      }
-    }
 
-  }
+      // Create and save the category
+      const category = new this.categoryModel({ name, description, slug });
+      await category.save();
 
-  findAll() {
-    try {
-      return this.categoryModel.find();
+      return this.responseService.success(category, 'Category created successfully', 201);
     } catch (error) {
-      return {
-        message: error.message
-      }
+      return this.responseService.error('Category creation failed', error.message);
     }
   }
 
-  findOne(id: string) {
+  async findAll() {
     try {
-      return this.categoryModel.findById(id);
+      const categories = await this.categoryModel.find().exec();
+      return this.responseService.success(categories, 'Categories fetched successfully');
     } catch (error) {
-      return {
-        message: error.message
-      }
+      return this.responseService.error('Category fetching failed', error.message);
     }
   }
 
-  async update(id: string, updateCategoryDto: UpdateCategoryDto, image?: Express.Multer.File) {
+  async findOne(id: string) {
     try {
-      const category = await this.categoryModel.findById(id);
+      const category = await this.categoryModel.findById(id).exec();
+
+      if (!category) return this.responseService.error('Category not found');
+
+      return this.responseService.success(category, 'Category retrieved successfully');
+
+    } catch (error) {
+      return this.responseService.error('Category retrieval failed', error.message);
+    }
+  }
+
+  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
+    try {
+      const category = await this.categoryModel.findById(id).exec();
       if (!category) {
-        throw new BadRequestException('Category not found');
+        return this.responseService.error('Category Not Found');
       }
 
-      if (image) {
-        updateCategoryDto.image = await this.fileUploadService.uploadImage(image);
+      // Destructure and handle slug
+      const { name, description } = updateCategoryDto;
+      let slug = category.slug;
+      if (name && name !== category.name) {
+        slug = await this.getUniqueSlug(slugify(name), id);
       }
-
-      if (category.name == updateCategoryDto.name) {
-        updateCategoryDto.slug = category.slug;
-      } else {
-        let slug = slugify(updateCategoryDto.name);
-        slug = await this.getUniqueSlug(slug, id);
-        updateCategoryDto.slug = slug;
-      }
-
-      return await this.categoryModel.findByIdAndUpdate(id, updateCategoryDto, { new: true });
+      // Update and return the category
+      const updateCategory = await this.categoryModel.findByIdAndUpdate(id, { name, description, slug }, { new: true }).exec();
+      return this.responseService.success(updateCategory, 'Category updated successfully');
     } catch (error) {
-      return {
-        message: error.message
-      }
+      return this.responseService.error('Category update failed', error.message);
     }
   }
 
-  remove(id: string) {
+  async remove(id: string) {
     try {
-      return this.categoryModel.findByIdAndDelete(id);
-    } catch (error) {
-      return {
-        message: error.message
+      const result = await this.categoryModel.findByIdAndDelete(id).exec();
+      if (!result) {
+        return this.responseService.error('Category not found');
       }
+      return this.responseService.success(result, 'Category deleted successfully');
+    } catch (error) {
+      return this.responseService.error('Category deletion failed', error.message);
     }
   }
 
-  private async getUniqueSlug(slug: string, excludeId?: string) {
+  private async getUniqueSlug(slug: string, excludeId?: string): Promise<string> {
     let uniqueSlug = slug;
     let index = 1;
 
@@ -102,7 +101,6 @@ export class CategoryService {
       uniqueSlug = `${slug}-${index}`;
       index++;
     }
-
     return uniqueSlug;
   }
 }

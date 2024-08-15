@@ -1,114 +1,124 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsEnum, IsArray, ValidateNested } from 'class-validator';
-import { BlogTagsDto } from './blog-tag.dto';
-import { BlogCategoryDto } from './blog-category.dto';
-import { Type } from 'class-transformer';
+import { IsString, IsNotEmpty, IsOptional, IsArray, IsEnum, IsMongoId } from 'class-validator';
+import { BlogStatus } from 'src/utils/blog-status.enum';
 
 export class CreateBlogDto {
     @ApiProperty({
         description: 'The title of the blog post',
-        example: 'Introduction to NestJS',
+        example: 'How to Prepare for the NCLEX',
     })
-    @IsNotEmpty()
     @IsString()
+    @IsNotEmpty()
     title: string;
 
     @ApiPropertyOptional({
-        description: 'Unique identifier for the blog post, auto-generated',
-        example: 'introduction-to-nestjs',
-    })
-    @IsOptional()
-    @IsString()
-    slug?: string;
-
-    @ApiProperty({
         description: 'A short description of the blog post',
-        example: 'A brief introduction to NestJS and its features.',
+        example: 'This blog post will help you prepare for the NCLEX exam...',
     })
-    @IsNotEmpty()
     @IsString()
+    @IsOptional()
     shortDescription: string;
 
-    @ApiProperty({
-        description: 'The main content of the blog post',
-        example: 'NestJS is a progressive Node.js framework...',
+    @ApiPropertyOptional({
+        description: 'The full content of the blog post',
+        example: '<p>This is the content of the blog...</p>',
     })
-    @IsNotEmpty()
     @IsString()
+    @IsOptional()
     content: string;
 
     @ApiPropertyOptional({
-        description: 'Image file for the blog post',
-        type: 'string',
-        format: 'binary',
+        description: 'URL to the image associated with the blog post',
+        example: 'https://example.com/image.jpg',
     })
+    @IsString()
     @IsOptional()
-    image?: any;
+    image: string;
 
     @ApiProperty({
-        description: 'The author of the blog post',
-        example: 'John Doe',
+        description: 'The ID of the author creating the blog post',
+        example: '66a23324a24ac3508d7bec94',
     })
+    @IsMongoId()
     @IsNotEmpty()
-    @IsString()
     author: string;
 
     @ApiPropertyOptional({
-        description: 'Image URL of the author',
-        type: 'string',
-        example: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdKLi4dcySybmV4zRSxD_D14djGszXTzIU9w&s'
+        type: [String],
+        description: 'An array of tag IDs associated with the blog post',
+        example: ['66b47f6a00fefed97aff5aab', '66b480a18c4436fa53507b74'],
     })
+    @IsArray()
+    @IsMongoId({ each: true })
     @IsOptional()
-    authorImage?:string;
-
-    @ApiProperty({
-        description: 'Status of the blog post',
-        example: 'Draft',
-    })
-    @IsNotEmpty()
-    @IsEnum(['Draft', 'Published', 'Archived'])
-    status: string;
-
-    @ApiProperty({
-        description: 'Tags associated with the blog post',
-        type: [BlogTagsDto]
-    })
-    // @IsArray()
-    // @ValidateNested({ each: true })
-    @Type(() => BlogTagsDto)
-    tags: BlogTagsDto[];
-
-    @ApiProperty({
-        description: 'Categories of the blog post',
-        type: [BlogCategoryDto],
-    })
-    // @IsArray()
-    // @ValidateNested({ each: true })
-    @Type(() => BlogCategoryDto)
-    categories: BlogCategoryDto[];
+    tags: string[];
 
     @ApiPropertyOptional({
-        description: 'Meta title for SEO',
-        example: 'Introduction to NestJS - A Comprehensive Guide',
+        type: [String],
+        description: 'An array of category IDs associated with the blog post',
+        example: ['66b47e6ba5d3097fc013f33e', '66b47e76a5d3097fc013f341'],
     })
+    @IsArray()
+    @IsMongoId({ each: true })
     @IsOptional()
+    categories: string[];
+
+    @ApiPropertyOptional({
+        enum: BlogStatus,
+        description: 'The status of the blog post',
+        example: BlogStatus.Draft,
+    })
+    @IsEnum(BlogStatus)
+    @IsOptional()
+    status: BlogStatus;
+
+    @ApiPropertyOptional({
+        description: 'The meta title for SEO',
+        example: 'Nclex in Nepal',
+    })
     @IsString()
-    metaTitle?: string;
+    @IsOptional()
+    metaTitle: string;
 
     @ApiPropertyOptional({
-        description: 'Meta description for SEO',
-        example: 'Learn about NestJS, a powerful Node.js framework, and how to get started with it.',
+        description: 'The meta description for SEO',
+        example: 'Learn how to prepare effectively for the NCLEX exam...',
     })
-    @IsOptional()
     @IsString()
-    metaDescription?: string;
+    @IsOptional()
+    metaDescription: string;
 
     @ApiPropertyOptional({
-        description: 'Meta keywords for SEO',
-        type: String,
-        example: ['NestJS', 'Node.js', 'Backend', 'Framework'],
+        type: [String],
+        description: 'An array of meta keywords for SEO',
+        example: ['NCLEX', 'Exam Preparation', 'Nursing'],
     })
-    @IsOptional()
+    @IsArray()
     @IsString({ each: true })
-    metaKeywords?: string[];
+    @IsOptional()
+    metaKeywords: string[];
+
+    @ApiPropertyOptional({
+        description: 'The og title for SEO',
+        example: 'Nclex in Nepal',
+    })
+    @IsString()
+    @IsOptional()
+    ogTitle: string;
+
+    @ApiPropertyOptional({
+        description: 'The og description for SEO',
+        example: 'Learn how to prepare effectively for the NCLEX exam...',
+    })
+    @IsString()
+    @IsOptional()
+    ogDescription: string;
+
+    @ApiPropertyOptional({
+        description: 'An link of og image for SEO',
+        example: 'https://example.com/image.jpg',
+    })
+    @IsString()
+    @IsOptional()
+    ogImage: string;
 }

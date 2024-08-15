@@ -26,13 +26,10 @@
         <textarea id="summernote" name="content" required></textarea><br><br>
 
         <label for="image">Image:</label><br>
-        <input type="file" id="image" name="image"><br><br>
+        <input type="text" id="image" value="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRehLr62t7IHXw-42JObPldAJbvHJq7aU7H6w&s" name="image"><br><br>
 
         <label for="author">Author:</label><br>
-        <input type="text" id="author" name="author" required><br><br>
-
-        <label for="authorImage">Author Image URL:</label><br>
-        <input type="text" id="authorImage" name="authorImage"><br><br>
+        <input type="text" id="author" value="66a23324a24ac3508d7bec94" name="author" required><br><br>
 
         <label for="status">Status:</label><br>
         <select id="status" name="status" required>
@@ -42,19 +39,19 @@
         </select><br><br>
 
         <label for="tags">Tags (comma separated):</label><br>
-        <input type="text" id="tags" name="tags" value="66ac6ef69c713207b0469742" required><br><br>
+        <input type="text" id="tags" name="tags" value="'66b47f6a00fefed97aff5aab', '66b480a18c4436fa53507b74'" required><br><br>
 
         <label for="categories">Categories (comma separated):</label><br>
-        <input type="text" id="categories" name="categories" value="66ac6bfa9c713207b04696cd" required><br><br>
+        <input type="text" id="categories" name="categories" value="'66b47e6ba5d3097fc013f33e', '66b47e76a5d3097fc013f341'" required><br><br>
 
         <label for="metaTitle">Meta Title:</label><br>
-        <input type="text" id="metaTitle" name="metaTitle"><br><br>
+        <input type="text" id="metaTitle" value="Nclex in Nepal" name="metaTitle"><br><br>
 
         <label for="metaDescription">Meta Description:</label><br>
         <input type="text" id="metaDescription" name="metaDescription"><br><br>
 
         <label for="metaKeywords">Meta Keywords (comma separated):</label><br>
-        <input type="text" id="metaKeywords" name="metaKeywords"><br><br>
+        <input type="text" id="metaKeywords" value="'NCLEX', 'Exam Preparation', 'Nursing'" name="metaKeywords"><br><br>
 
         <button type="button" onclick="submitForm()">Submit</button>
     </form>
@@ -93,16 +90,6 @@
             if (formData.get('files') || formData.get('files').name === "") {
                 formData.delete('files');   
             }
-
-            // Convert tags and categories to JSON strings
-            const tags = formData.get('tags').split(',').map(tag => ({ tag: tag.trim() }));
-            formData.set('tags', JSON.stringify(tags));
-
-            const categories = formData.get('categories').split(',').map(category => ({ category: category.trim() }));
-            formData.set('categories', JSON.stringify(categories));
-
-            const metaKeywords = formData.get('metaKeywords').split(',');
-            formData.set('metaKeywords', JSON.stringify(metaKeywords));
 
             const xhr = new XMLHttpRequest();
             xhr.open('POST', 'http://localhost:5000/blog', true);
