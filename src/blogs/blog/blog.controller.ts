@@ -33,7 +33,7 @@ export class BlogController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new blog post with an optional image upload' })
+  @ApiOperation({ summary: 'Create a new blog post' })
   @ApiResponse({ status: 201, description: 'The blog has been successfully created.' })
   @ApiResponse({ status: 400, description: 'Invalid input.' })
   async create(@Body() createBlogDto: CreateBlogDto) {
@@ -48,7 +48,7 @@ export class BlogController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update an existing blog post with an optional image upload' })
+  @ApiOperation({ summary: 'Update an existing blog post' })
   @ApiResponse({ status: 200, description: 'Blog post successfully updated.' })
   @ApiResponse({ status: 404, description: 'Blog post not found.' })
   async update(@Param('id') id: string, @Body() updateBlogDto: UpdateBlogDto) {

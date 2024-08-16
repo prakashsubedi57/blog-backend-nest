@@ -61,7 +61,7 @@ export class BlogService {
 
 
       // send email to newsletter subscribers
-      if(status === 'Published'){
+      if (status === 'Published') {
         await this.sendemailtonewsletter(createdBlog);
       }
 
@@ -160,7 +160,7 @@ export class BlogService {
       if (!updatedBlog) return this.responseService.error('Blog update failed');
 
       // send email to newsletter subscribers
-      if(blog.status != 'Published' && updateBlogDto.status === 'Published' ){
+      if (blog.status != 'Published' && updateBlogDto.status === 'Published') {
         await this.sendemailtonewsletter(updatedBlog);
       }
       return this.responseService.success(updatedBlog, 'Blog updated successfully');
@@ -213,7 +213,7 @@ export class BlogService {
       slug = `${slugify(title)}-${index}`;
       index++;
     }
-    
+
     return slug;
   }
 
@@ -244,15 +244,11 @@ export class BlogService {
     if (filterDto.title) {
       query.title = { $regex: filterDto.title, $options: 'i' };
     }
-
     if (filterDto.categories && filterDto.categories.length > 0) {
       query['categories.category'] = { $in: filterDto.categories };
     }
     if (filterDto.tags && filterDto.tags.length > 0) {
       query['tags.tag'] = { $in: filterDto.tags };
-    }
-    if (filterDto.author) {
-      query.author = filterDto.author;
     }
     if (filterDto.createdDate) {
       query.createdAt = { $gte: new Date(filterDto.createdDate) };
@@ -285,19 +281,20 @@ export class BlogService {
     return { pageNumber, pageSize };
   }
 
-  private async sendemailtonewsletter(blog:any) {
-    // send email to newsletter
+  private async sendemailtonewsletter(blog: any) {
     try {
       const subscribers = await this.newsletterModule.find().exec();
-      for (const subscriber of subscribers) {
-        await this.emailService.sendMailToNewBlog(
+      const emailPromises = subscribers.map(subscriber =>
+        this.emailService.sendMailToNewBlog(
           subscriber.email,
           'New Blog is Posted by Nclex Nepal',
-          blog.title
-        );
-      }
+          blog.title,
+          blog
+        )
+      );
+      await Promise.all(emailPromises);
     } catch (error) {
-      return ;
+      console.error('Failed to send email to subscribers:', error);
     }
   }
 }

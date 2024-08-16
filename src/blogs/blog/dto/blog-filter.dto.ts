@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsOptional, IsString, IsArray, IsDateString, IsIn, IsPositive } from "class-validator";
+import { BlogStatus } from "src/utils/blog-status.enum";
 
 export class BlogFilterDto {
     @ApiProperty({
@@ -9,7 +10,7 @@ export class BlogFilterDto {
     })
     @IsOptional()
     @IsString()
-    title?: string;
+    title: string;
 
     @ApiProperty({
         description: 'Blog category',
@@ -19,7 +20,7 @@ export class BlogFilterDto {
     @IsOptional()
     @IsArray()
     @IsString({ each: true })
-    categories?: string[];
+    categories: string[];
 
     @ApiProperty({
         description: 'Blog tags',
@@ -29,16 +30,7 @@ export class BlogFilterDto {
     @IsOptional()
     @IsArray()
     @IsString({ each: true })
-    tags?: string[];
-
-    @ApiProperty({
-        description: 'Blog author',
-        example: 'Blog author',
-        required: false
-    })
-    @IsOptional()
-    @IsString()
-    author?: string;
+    tags: string[];
 
     @ApiProperty({
         description: 'Blog created date',
@@ -47,7 +39,7 @@ export class BlogFilterDto {
     })
     @IsOptional()
     @IsDateString()
-    createdDate?: string;
+    createdDate: string;
 
     @ApiProperty({
         description: 'Blog updated date',
@@ -56,7 +48,7 @@ export class BlogFilterDto {
     })
     @IsOptional()
     @IsDateString()
-    updatedDate?: string;
+    updatedDate: string;
 
     @ApiProperty({
         description: 'Order by created date',
@@ -66,7 +58,7 @@ export class BlogFilterDto {
     })
     @IsOptional()
     @IsIn(['asc', 'desc'])
-    orderByCreatedDate?: 'asc' | 'desc';
+    orderByCreatedDate: 'asc' | 'desc';
 
     @ApiProperty({
         description: 'Order by updated date',
@@ -76,7 +68,7 @@ export class BlogFilterDto {
     })
     @IsOptional()
     @IsIn(['asc', 'desc'])
-    orderByUpdatedDate?: 'asc' | 'desc';
+    orderByUpdatedDate: 'asc' | 'desc';
 
     @ApiProperty({
         description:'Page Number',
@@ -84,7 +76,7 @@ export class BlogFilterDto {
     })
     @IsOptional()
     @IsPositive()
-    pageNumber?: number;
+    pageNumber: number;
 
     @ApiProperty({
         description: 'Page Size',
@@ -92,15 +84,15 @@ export class BlogFilterDto {
     })
     @IsOptional()
     @IsPositive()
-    pageSize?: number;
+    pageSize: number;
 
     @ApiProperty({
         description: 'Filter By Status',
         example: 'Published',
         required: false,
-        enum: ['Draft', 'Published', 'Archived'],
+        enum: BlogStatus,
     })
     @IsOptional()
-    @IsIn(['Draft', 'Published', 'Archived'])
-    status?: 'Draft' | 'Published' | 'Archived';
+    @IsIn([BlogStatus])
+    status: 'Draft' | 'Published' | 'Archived';
 }

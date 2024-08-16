@@ -48,9 +48,9 @@ export class MailerService {
       throw new ConflictException('Email sending failed: ' + error.message);
     }
   }
-  async sendMailToNewBlog(to: string, subject: string, text: string) {
+  async sendMailToNewBlog(to: string, subject: string, text: string,blog:any) {
     try {
-      const htmlTemplate = await this.getHtmlTemplateNewsletter();
+      const htmlTemplate = await this.getHtmlTemplateNewsletter(blog);
 
       await this.transporter.sendMail({
         from: process.env.MAIL_FROM,
@@ -69,8 +69,17 @@ export class MailerService {
     return await readFile(filePath, 'utf-8');
   }
 
-  private async getHtmlTemplateNewsletter(): Promise<string> {
+  private async getHtmlTemplateNewsletter(blog: any): Promise<string> {
     const filePath = join('src/', 'templates', 'new-blog.html');
-    return await readFile(filePath, 'utf-8');
+    let template = await readFile(filePath, 'utf-8');
+
+    // Replace placeholders with actual blog data
+    template = template.replace('{{blogTitle}}', blog.title);
+    template = template.replace('{{imageUrl}}', blog.image);
+    template = template.replace('{{shortDescription}}', blog.shortDescription);
+    template = template.replace('{{blogUrl}}', `https://nclexinnepal.com/blog/${blog.slug}`);
+
+    return template;
   }
+
 }

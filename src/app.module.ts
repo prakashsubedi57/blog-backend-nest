@@ -26,7 +26,6 @@ import { MailerModule } from './mailer/mailer.module';
     BlogModule,
     NewsletterModule,
     MailerModule
-
   ],
   controllers: [AppController],
   providers: [AppService],
