@@ -94,5 +94,5 @@ export class BlogFilterDto {
     })
     @IsOptional()
     @IsIn([BlogStatus])
-    status: 'Draft' | 'Published' | 'Archived';
+    status: BlogStatus;
 }

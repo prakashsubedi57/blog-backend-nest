@@ -42,13 +42,13 @@ export class CommentService {
       // Create a new comment
       const comment = new this.commentModel({ blog, content, parentComment, user });
 
-      // Initialize or update blog's comments array
-      gotBlog.comments = gotBlog.comments || [];
-      gotBlog.comments.push(comment);
+        // Initialize or update blog's comments array
+        gotBlog.comments = gotBlog.comments || [];
+        gotBlog.comments.push(comment);
 
-      await comment.save();
+        await comment.save();
 
-      await gotBlog.save();
+        await gotBlog.save();
 
       return this.responseService.success(comment, 'Comment created successfully');
     } catch (error) {
